@@ -1,0 +1,23 @@
+body {
+    margin: 0;
+    padding: 0;
+    /* background-color: brown; */
+}
+
+/* .pagina {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100%;
+}*/
+
+canvas {
+    margin-top: 50px;
+    border-radius: 10px;
+    border: 2px solid black;
+    display: block;
+    margin: 0px auto;
+    margin-top: 2vh;
+}
+
+

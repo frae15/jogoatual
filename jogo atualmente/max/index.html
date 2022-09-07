@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" type="text/css" />
+    <script src="Config.js"></script>
+    <script src="Controle.js"></script>
+    <script src="Tiro.js"></script>
+    <script src="Jogador.js"></script>
+    <script src="Inimigos.js"></script>
+    <script src="Frame.js"></script>
+    <script src="Cenario.js"></script>
+    <script src="dialogos.js"></script>
+    <title>Ivaldo's fight</title>
+  </head>
+
+  <body>
+    <div class="pagina">
+      <canvas width="1080" height="540"></canvas>
+    </div>
+
+    <script>
+      const isDirectionRight = (keyCode) => keyCode == 68 || keyCode == 39;
+      const isDirectionLeft = (keyCode) => keyCode == 37 || keyCode == 65;
+      const isDirectionUp = (keyCode) => keyCode == 87 || keyCode == 38;
+      const isDirectionDown = (keyCode) => keyCode == 40 || keyCode == 83;
+      const canvas = document.querySelector("canvas");
+      const ctx = canvas.getContext("2d");
+      const config = new Config();
+
+      let atirando = [];
+      const max = new Jogador({
+        position: {
+          x: 440,
+          y: 300,
+        },
+        veloci: {
+          x: 0,
+          y: 0,
+        },
+        frame: new Frame(2, 10, config, "parado"),
+        controle: new Controle(),
+        config,
+        ctx,
+      });
+
+      const cenarios = new Cenario({
+        //por padrao, por conta do primeiro cenario, ventilador é animado
+        objetos: [
+          {
+            obj: "bolhas",
+            objetox: 1000,
+            objetoy: 0,
+            objetowidth: canvas.width,
+            objetoheight: canvas.height,
+            objetoqframes: 4,
+            frameatual: 1,
+          },
+        ],
+        max,
+        config,
+        ctx,
+      });
+
+      let bolhas = {
+        obj: "bolhas",
+        objetox: 960,
+        objetoy: 128,
+        objetowidth: 100,
+        objetoheight: 280,
+        objetoqframes: 4,
+        frameatual: 1,
+      };
+      let ventilador = {
+        obj: "ventilador",
+        objetox: 760,
+        objetoy: -50,
+        objetowidth: 220,
+        objetoheight: 320,
+        objetoqframes: 2,
+        frameatual: 1,
+      };
+
+      let gatinhocenario = {
+        obj: "gatinho",
+        objetox: 270,
+        objetoy: canvas.height - 190,
+        objetowidth: 60,
+        objetoheight: 60,
+        objetoqframes: 2,
+        frameatual: 1,
+      };
+
+      const inimigo1 = new Inimigos({
+        position: {
+          x: 80,
+          y: -140,
+        },
+        veloci: {
+          y: 0,
+          x: 0,
+        },
+        sprite: 1,
+        width: 80,
+        height: 100,
+        config,
+        ctx,
+      });
+      const inimigo2 = new Inimigos({
+        position: {
+          x: 150,
+          y: -140,
+        },
+        veloci: {
+          y: 0,
+          x: 0,
+        },
+        sprite: 2,
+        width: 60,
+        height: 80,
+        config,
+        ctx,
+      });
+      const inimigo3 = new Inimigos({
+        position: {
+          x: 800,
+          y: -140,
+        },
+        veloci: {
+          y: 0,
+          x: 0,
+        },
+        sprite: 3,
+        width: 70,
+        height: 100,
+        config,
+        ctx,
+      });
+      const inimigo4 = new Inimigos({
+        position: {
+          x: 850,
+          y: -140,
+        },
+        veloci: {
+          y: 0,
+          x: 0,
+        },
+        sprite: 4,
+        width: 60,
+        height: 80,
+        config,
+        ctx,
+      });
+
+      let inimigos = [inimigo1, inimigo2, inimigo3, inimigo4];
+
+      function removerTiro(tiro) {
+        atirando = atirando.filter((t) => tiro != t);
+      }
+
+      function removerInimigo(inimigo) {
+        inimigos = inimigos.filter((i) => i != inimigo);
+      }
+
+      function exibirVida(vida) {
+        //teste
+        const life = new Image();
+        life.src = "./img/info/vida.png";
+        ctx.beginPath();
+        var degrade = ctx.createLinearGradient(0, 0, 200, 0);
+        degrade.addColorStop(0, "DarkRed");
+        degrade.addColorStop(1, "red");
+        ctx.fillStyle = degrade;
+        ctx.fillRect(75, 29, Math.max(0, (151 * vida) / 100), 33);
+        ctx.closePath();
+
+        ctx.drawImage(life, 50, 22, 180, 50);
+      }
+
+      function exibirTiros() {
+        ctx.font = "30pt sans-serif";
+        ctx.fillStyle = "black";
+        ctx.fillText(limiteTiros + "/10", canvas.width - 100, 70, 1000, 1000);
+      }
+
+      function quantini() {
+        let teminimigo = inimigos.length > 0 ? true : false;
+
+        if (!teminimigo) {
+          cenarios.aberta = 2;
+          cenarios.podepassar = true;
+        }
+      }
+
+      let limiteTiros = 10;
+
+      window.addEventListener("keydown", (event) => {
+        const code = event.keyCode;
+        if (isDirectionRight(code)) {
+          max.controle.enableD();
+          max.controle.dirX = "d";
+        } else if (isDirectionLeft(code)) {
+          max.controle.enableA();
+          max.controle.dirX = "e";
+        } else if (isDirectionUp(code)) max.controle.enableW();
+        else if (event.key == " " && max.veloci.y == 0 && max.veloci.x == 0) {
+          if (limiteTiros == 0) return;
+          max.frame.changeEstado("atirando");
+          atirando.push(
+            new Tiro({
+              position: {
+                x:
+                  max.controle.dirX == "d"
+                    ? max.position.x + max.width
+                    : max.position.x - 40,
+                y: max.position.y + 60,
+              },
+              veloci: {
+                x: max.controle.dirX == "e" ? -8 : 8,
+              },
+              config,
+              ctx,
+            })
+          );
+
+          limiteTiros--;
+        }
+      });
+
+      //solta tecla
+      window.addEventListener("keyup", (event) => {
+        const code = event.keyCode;
+        if (isDirectionRight(code)) max.controle.disableD();
+        else if (isDirectionLeft(code)) max.controle.disableA();
+        else if (isDirectionUp(code)) max.controle.disableW();
+        else if (event.key == " ") {
+          limiteTiros = 10;
+          if (max.frame.estado != "atirando") return;
+          max.frame.changeEstado("pararAtirar");
+        }
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        //define fundo
+
+        cenarios.transicoes();
+        cenarios.desenhaobj();
+
+        atirando.forEach((tiro) => {
+          tiro.func(inimigos, removerTiro);
+        });
+
+        quantini();
+        max.upd(inimigos);
+        if (cenarios.cenarioatual == 1) {
+          inimigos.forEach((ini) => {
+            ini.gravi(max, removerInimigo);
+          });
+        }
+
+        exibirVida(max.vida);
+        exibirTiros();
+        dialogos(
+          ["Professor, por que me chamou aqui?","Olá Max, você está aqui por um motivo.","Qual motivo?","Você está aqui para melhorar sua nota em:","Matemática e Pratica de Laboratório","Ue mas você da aula de fisíca","Confia no pai","Tabao mas como vou melhorar essas notas?","Você vai ter que lutar contra o seu maior inimigo, você mesmo","Meus maiores inimigos são esses professores ai meu filho","Max não seja tolo, eu sei que com você eu consigo avançar.","Desculpa professor mas o problema é eles não eu","Max acabe com seu maior inimigo, o seu verdadeiro inimigo","Tabom vou la atras dos professores valeu","Não foi isso que eu disse"],
+          ["Max","Marciel", "Max","Marciel","Marciel","Max","Marciel","Max","Marciel","Max","Marciel","Max","Marciel","Max","Marciel","Max","Marciel"]
+        );
+        config.gameframe++;
+      }
+
+      animate();
+    </script>
+  </body>
+</html>
